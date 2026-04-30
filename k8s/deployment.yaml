@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mps-for-manju
+  namespace: default
+  labels:
+    app: mps-for-manju
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mps-for-manju
+  template:
+    metadata:
+      labels:
+        app: mps-for-manju
+    spec:
+      containers:
+        - name: mps-for-manju
+          image: xiongfei-test.tencentcloudcr.com/xiongfei/mps-for-manju:v0501
+          ports:
+            - containerPort: 3001
+          env:
+            # 从 Secret 中引用腾讯云凭证
+            - name: TENCENT_SECRET_ID
+              valueFrom:
+                secretKeyRef:
+                  name: mps-tencent-credentials
+                  key: TENCENT_SECRET_ID
+            - name: TENCENT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mps-tencent-credentials
+                  key: TENCENT_SECRET_KEY
+            # 其他环境变量
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "3001"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mps-for-manju
+  namespace: default
+spec:
+  selector:
+    app: mps-for-manju
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3001
+  type: ClusterIP
