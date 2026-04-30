@@ -58,6 +58,12 @@ docker run -d -p 3001:3001 \
 | COS_BUCKET | COS 存储桶名称 |
 | COS_REGION | COS 存储桶地域 |
 
+## CI/CD
+
+本项目支持自动化镜像构建和部署。
+
+**最后更新**: 2026-05-01
+
 ## 许可证
 
 MIT
