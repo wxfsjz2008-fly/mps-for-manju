@@ -1,4 +1,3 @@
-import React from 'react';
 import { RESOLUTION_TEMPLATES, DEFAULT_TEMPLATE_ID } from '../config/templates';
 
 interface ResolutionSelectorProps {
@@ -11,11 +10,11 @@ interface ResolutionSelectorProps {
  * 分辨率选择器组件
  * 使用多选复选框展示分辨率选项，支持同时选择多个分辨率
  */
-export const ResolutionSelector: React.FC<ResolutionSelectorProps> = ({
+export const ResolutionSelector = ({
   value = [DEFAULT_TEMPLATE_ID],
   onChange,
   disabled = false,
-}) => {
+}: ResolutionSelectorProps) => {
   const handleToggle = (templateId: number) => {
     if (disabled) return;
     

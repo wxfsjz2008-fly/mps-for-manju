@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, useState, useEffect, MouseEvent } from 'react';
+import { useRef, useCallback, useState, useEffect, type MouseEvent } from 'react';
 
 interface SplitComparePlayerProps {
   originalSrc: string;
@@ -6,11 +6,11 @@ interface SplitComparePlayerProps {
   onClose?: () => void;
 }
 
-export const SplitComparePlayer: React.FC<SplitComparePlayerProps> = ({
+export const SplitComparePlayer = ({
   originalSrc,
   enhancedSrc,
   onClose,
-}) => {
+}: SplitComparePlayerProps) => {
   const originalVideoRef = useRef<HTMLVideoElement>(null);
   const enhancedVideoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);

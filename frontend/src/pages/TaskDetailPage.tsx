@@ -60,7 +60,7 @@ export const TaskDetailPage = () => {
       // 如果任务正在处理中，主动查询 MPS 状态来更新进度
       if (taskData.status === 'processing') {
         try {
-          const mpsStatus = await mpsApi.getStatus(id);
+          await mpsApi.getStatus(id);
           // MPS 状态查询会在后端更新数据库，重新获取最新数据
           taskData = await taskApi.getDetail(id);
         } catch (mpsErr) {

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect, MouseEvent } from 'react';
+import { useState, useRef, useCallback, useEffect, type MouseEvent } from 'react';
 
 interface ScreenshotCompareProps {
   originalSrc: string;
@@ -6,11 +6,11 @@ interface ScreenshotCompareProps {
   onClose?: () => void;
 }
 
-export const ScreenshotCompare: React.FC<ScreenshotCompareProps> = ({
+export const ScreenshotCompare = ({
   originalSrc,
   enhancedSrc,
   onClose,
-}) => {
+}: ScreenshotCompareProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [splitPosition, setSplitPosition] = useState(50);
   const [isDragging, setIsDragging] = useState(false);

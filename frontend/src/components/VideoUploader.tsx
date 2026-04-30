@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useRef, DragEvent, ChangeEvent } from 'react';
+import { useCallback, useState, useRef, type DragEvent, type ChangeEvent } from 'react';
 import COS from 'cos-js-sdk-v5';
 import { uploadApi, taskApi, mpsApi } from '../services/api';
 import { ResolutionSelector } from './ResolutionSelector';
@@ -19,10 +19,10 @@ interface UploadProgress {
 const ALLOWED_TYPES = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/avi'];
 const MAX_SIZE = 2 * 1024 * 1024 * 1024; // 2GB
 
-export const VideoUploader: React.FC<VideoUploaderProps> = ({
+export const VideoUploader = ({
   onUploadComplete,
   autoEnhance = true,
-}) => {
+}: VideoUploaderProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);

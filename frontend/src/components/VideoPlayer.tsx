@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useState, useCallback, type RefObject } from 'react';
 
 interface VideoPlayerProps {
   src: string;
@@ -7,10 +7,10 @@ interface VideoPlayerProps {
   onDurationChange?: (duration: number) => void;
   onPlay?: () => void;
   onPause?: () => void;
-  syncRef?: React.RefObject<HTMLVideoElement | null>;
+  syncRef?: RefObject<HTMLVideoElement | null>;
 }
 
-export const VideoPlayer: React.FC<VideoPlayerProps> = ({
+export const VideoPlayer = ({
   src,
   className = '',
   onTimeUpdate,
@@ -18,7 +18,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   onPlay,
   onPause,
   syncRef,
-}) => {
+}: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
