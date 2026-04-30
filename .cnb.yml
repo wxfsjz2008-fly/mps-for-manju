@@ -1,0 +1,18 @@
+# CNB 构建配置
+# 构建 Docker 镜像并推送到腾讯云镜像仓库
+
+main:
+  push:
+    - docker:
+        # 构建 Docker 镜像
+        build:
+          file: Dockerfile
+          context: .
+        # 镜像仓库配置
+        image: xiongfei-test.tencentcloudcr.com/xiongfei/mps-for-manju
+        tag: latest
+        # 推送到腾讯云镜像仓库
+        registry:
+          url: xiongfei-test.tencentcloudcr.com
+          username: 100013033031
+          password: ${{ secrets.TCR_PASSWORD }}
