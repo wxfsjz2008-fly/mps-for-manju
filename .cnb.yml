@@ -9,7 +9,7 @@ main:
         TCR_REGISTRY: xiongfei-test.tencentcloudcr.com
         TCR_USERNAME: "100013033031"
         IMAGE_NAME: xiongfei-test.tencentcloudcr.com/xiongfei/mps-for-manju
-        IMAGE_TAG: latest
+        IMAGE_TAG: v0501
       stages:
         - name: 登录腾讯云镜像仓库
           script: |
