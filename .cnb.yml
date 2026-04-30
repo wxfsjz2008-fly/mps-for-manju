@@ -13,7 +13,7 @@ main:
       stages:
         - name: 登录腾讯云镜像仓库
           script: |
-            echo 'eyJhbGciOiJSUzI1NiIsImtpZCI6Iks1RVc6NVFUUDpDSVhaOkdVWkY6UzNFQjpHTlVPOjMzWVU6TlhXUzpJVkI3OldLV006U0dTUTpISTNSIn0.eyJvd25lclVpbiI6IjEwMDAxODAyMTkzMiIsIm9wZXJhdG9yVWluIjoiMTAwMDEzMDMzMDMxIiwiZXhwIjoxNzc3NTc1NTE1LCJuYmYiOjE3Nzc1NzE5MTUsImlhdCI6MTc3NzU3MTkxNX0.ZRxlaFvpZzTu47m_bxhLmUpfNWeG6odEMYp2ldoHoVsxAT_DT-RtyYHCgfCXJAeCzmjaK_Vi8OXmdXCtaOhN_WB55zOHS12_lxCydLKvJIOu0qyb7pEQk223LAXhOv1nxXSTVRlRi6YRXDJqcir-GP9DGSL1_4aeyB4w3NCFCUPg3_H19rLOXr2Qh2YOB6MYPszheWPbJLY3wjEEF7O9QWbG9CV1fpQvLMSHkCgChclFNwVanKLoWWTPXclf2LMxE-E-OuOVDAqPaO8-kqWQH8ipxfTP4ZLgMdLtnHphs4cjQsUd9VlOKYCTGosbvV4nwrAtf0FW4Te7KGP8L523tQ' | docker login -u $TCR_USERNAME --password-stdin $TCR_REGISTRY
+            echo 'eyJhbGciOiJSUzI1NiIsImtpZCI6Iks1RVc6NVFUUDpDSVhaOkdVWkY6UzNFQjpHTlVPOjMzWVU6TlhXUzpJVkI3OldLV006U0dTUTpISTNSIn0.eyJvd25lclVpbiI6IjEwMDAxODAyMTkzMiIsIm9wZXJhdG9yVWluIjoiMTAwMDEzMDMzMDMxIiwidG9rZW5JZCI6ImQ3cHB2aXFqZm82MGs0bGVkdGZnIiwiZXhwIjoyMDkyOTMzODM1LCJuYmYiOjE3Nzc1NzM4MzUsImlhdCI6MTc3NzU3MzgzNX0.aK1b13ZKCz1koowfuYSvUbQoV23y3BYWtLsea2JKRUEi1uL0sqCOVLapIT5cFNBQqRlSCV9uiTt89oDYoAcQMP0Pbdx-Jwjit3d-QgeRLyftvaZnno8uHCPYUyPUsRYWu0lVue0LO2dWB4UppUOzcMz39hXZeoqTX2Vcp_wkGjkbef8hU2u2_3roIgLLbzXqNP_nEKjqhiuF_s5cO888Xq8yOOQ8wDZ1KhrpKnwurvnsp0h6MxifyAwmYW7Ohj9gEVfECPfr3K0ukJvHYIn1kWbBvDBfBE8SFXBEQJOFk_5Rtuk_5t5xh8FoRFEx-hO5w-zLss0-g8l-8Pix9qRSew' | docker login -u $TCR_USERNAME --password-stdin $TCR_REGISTRY
         - name: 构建 Docker 镜像
           script: |
             docker build -t $IMAGE_NAME:$IMAGE_TAG .
