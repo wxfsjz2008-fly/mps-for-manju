@@ -8,13 +8,12 @@ main:
       env:
         TCR_REGISTRY: xiongfei-test.tencentcloudcr.com
         TCR_USERNAME: "100013033031"
-        TCR_PASSWORD: ${{ envs.TCR_PASSWORD }}
         IMAGE_NAME: xiongfei-test.tencentcloudcr.com/xiongfei/mps-for-manju
         IMAGE_TAG: latest
       stages:
         - name: 登录腾讯云镜像仓库
           script: |
-            docker login -u $TCR_USERNAME -p "$TCR_PASSWORD" $TCR_REGISTRY
+            echo 'eyJhbGciOiJSUzI1NiIsImtpZCI6Iks1RVc6NVFUUDpDSVhaOkdVWkY6UzNFQjpHTlVPOjMzWVU6TlhXUzpJVkI3OldLV006U0dTUTpISTNSIn0.eyJvd25lclVpbiI6IjEwMDAxODAyMTkzMiIsIm9wZXJhdG9yVWluIjoiMTAwMDEzMDMzMDMxIiwiZXhwIjoxNzc3NTcyNzEzLCJuYmYiOjE3Nzc1NjkxMTMsImlhdCI6MTc3NzU2OTExM30.BtOlZsD8fedLdOGE5US0_vHZQQgUMHgsE9ASOcji9zOVTwaF68LzwtA7TSKaEf1tvJB4to8Tc-x-HHp-8mS_Xw4gE9nVs3uCh_R52i_LSRjFyCUIMCZ7Yf59VOLj5Mn6Z1KV6v1X5nwGwV4F8i4UdKRr42H3L_zPVvrnp84rWblPQjz68Jdn07aXAaLdDbazDwTi01u4O_Yltor-sexzEhPsQN7vvdfiq0gRyVG5i-wF41Jr10AsohTo-ZC7PGaWu1oJrf2selFNfI0Eir7w7MD2j7yjF8fb3T3vxuARibP3m-40UGAJBVClMEKfBb3l94CYvD8KyrktKPgnXbQT8g' | docker login -u $TCR_USERNAME --password-stdin $TCR_REGISTRY
         - name: 构建 Docker 镜像
           script: |
             docker build -t $IMAGE_NAME:$IMAGE_TAG .
