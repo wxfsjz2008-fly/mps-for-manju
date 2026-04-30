@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { taskApi, mpsApi, uploadApi } from '../services/api';
 import type { Task, TaskStatus } from '../types';
@@ -30,7 +30,7 @@ interface SignedUrlCache {
   expiresAt: number;
 }
 
-export const TaskDetailPage: React.FC = () => {
+export const TaskDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   

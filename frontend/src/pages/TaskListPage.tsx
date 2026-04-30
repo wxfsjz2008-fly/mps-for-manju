@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { taskApi } from '../services/api';
 import type { Task, TaskStatus } from '../types';
@@ -22,7 +22,7 @@ const STATUS_COLORS: Record<TaskStatus, string> = {
 // 轮询间隔（毫秒）
 const POLL_INTERVAL = 3000;
 
-export const TaskListPage: React.FC = () => {
+export const TaskListPage = () => {
   const navigate = useNavigate();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);

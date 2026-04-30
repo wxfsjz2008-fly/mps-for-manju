@@ -1,8 +1,7 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import VideoUploader from '../components/VideoUploader';
 
-export const UploadPage: React.FC = () => {
+export const UploadPage = () => {
   const navigate = useNavigate();
 
   const handleUploadComplete = (taskId: string) => {
