@@ -15,4 +15,4 @@ main:
         registry:
           url: xiongfei-test.tencentcloudcr.com
           username: 100013033031
-          password: ${{ secrets.TCR_PASSWORD }}
+          password: ${{ envs.TCR_PASSWORD }}
