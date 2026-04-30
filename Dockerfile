@@ -35,6 +35,17 @@ RUN mkdir -p /app/data
 ENV NODE_ENV=production
 ENV PORT=3001
 
+# 非敏感配置 - 可以硬编码
+ENV COS_REGION=ap-nanjing
+ENV MPS_REGION=ap-nanjing
+ENV COS_BUCKET=mps-1259916703
+ENV MPS_ENHANCE_TEMPLATE_ID=30077
+ENV CALLBACK_URL=http://119.91.150.127:30015/api/mps/callback
+
+# ⚠️ 敏感配置 - 必须在部署时通过环境变量传入，不要硬编码！
+# ENV TENCENT_SECRET_ID=<在TKE中配置>
+# ENV TENCENT_SECRET_KEY=<在TKE中配置>
+
 # 暴露端口
 EXPOSE 3001
 
