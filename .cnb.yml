@@ -14,7 +14,7 @@ main:
         - name: 生成镜像标签
           script: |
             export IMAGE_TAG="v$(date +%y%m%d)${BUILD_NUMBER}"
-            echo "IMAGE_TAG=$IMAGE_TAG" >> $CNB_ENV
+            echo "IMAGE_TAG=$IMAGE_TAG" >> "$CNB_ENV"
             echo "镜像标签: $IMAGE_TAG"
         - name: 登录腾讯云镜像仓库
           script: |
