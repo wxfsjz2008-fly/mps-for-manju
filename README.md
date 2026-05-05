@@ -62,7 +62,16 @@ docker run -d -p 3001:3001 \
 
 本项目支持自动化镜像构建和部署。
 
-**最后更新**: 2026-05-05 13:08 - 持续集成测试 (v9)
+### CNB 流水线
+- 镜像标签格式: `YYYY-MM-DD`
+- 触发条件: 推送到 main 分支
+
+### GitHub Actions
+- 镜像标签格式: `github-main-YYYYMMDD-XX` (XX 为递增序号)
+- 触发条件: 推送到 main 分支
+- ⚠️ 需要在 GitHub 仓库设置中添加 Secret: `TCR_PASSWORD`
+
+**最后更新**: 2026-05-05 13:14 - 添加 GitHub Actions CI (v10)
 
 ## 许可证
 

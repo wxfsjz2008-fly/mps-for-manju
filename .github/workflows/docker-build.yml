@@ -1,0 +1,69 @@
+# GitHub Actions 构建配置
+# 构建 Docker 镜像并推送到腾讯云镜像仓库
+# 镜像标签格式: github-main-YYYYMMDD-XX (XX 为当日递增序号)
+
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  TCR_REGISTRY: xiongfei-test.tencentcloudcr.com
+  TCR_USERNAME: "100013033031"
+  IMAGE_NAME: xiongfei-test.tencentcloudcr.com/xiongfei/mps-for-manju
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 登录腾讯云镜像仓库
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.TCR_REGISTRY }}
+          username: ${{ env.TCR_USERNAME }}
+          password: ${{ secrets.TCR_PASSWORD }}
+
+      - name: 生成镜像标签
+        id: tag
+        run: |
+          # 获取当前日期
+          DATE=$(date +%Y%m%d)
+          
+          # 从仓库获取当天已有的标签数量来确定序号
+          # 先尝试获取已有标签列表
+          echo "正在检查当天已有的镜像标签..."
+          
+          # 使用 GitHub run_number 来生成唯一递增序号
+          # run_number 是 GitHub Actions 为每个工作流自动递增的数字
+          RUN_NUM=${{ github.run_number }}
+          
+          # 格式化序号为两位数
+          SEQ=$(printf "%02d" $RUN_NUM)
+          
+          # 生成最终标签
+          IMAGE_TAG="github-main-${DATE}-${SEQ}"
+          
+          echo "镜像标签: $IMAGE_TAG"
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: 构建 Docker 镜像
+        run: |
+          docker build -t ${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.IMAGE_TAG }} .
+
+      - name: 推送镜像到腾讯云镜像仓库
+        run: |
+          docker push ${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.IMAGE_TAG }}
+          docker tag ${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.IMAGE_TAG }} ${{ env.IMAGE_NAME }}:github-latest
+          docker push ${{ env.IMAGE_NAME }}:github-latest
+
+      - name: 输出镜像信息
+        run: |
+          echo "✅ 镜像构建并推送成功！"
+          echo "📦 镜像地址: ${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.IMAGE_TAG }}"
+          echo "🏷️ 最新标签: ${{ env.IMAGE_NAME }}:github-latest"
