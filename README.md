@@ -71,7 +71,7 @@ docker run -d -p 3001:3001 \
 - 触发条件: 推送到 main 分支
 - ⚠️ 需要在 GitHub 仓库设置中添加 Secret: `TCR_PASSWORD`
 
-**最后更新**: 2026-05-05 13:14 - 添加 GitHub Actions CI (v10)
+**最后更新**: 2026-05-05 13:16 - 持续集成测试 (v11)
 
 ## 许可证
 
