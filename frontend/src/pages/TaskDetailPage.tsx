@@ -137,7 +137,8 @@ export const TaskDetailPage = () => {
   useEffect(() => {
     if (task?.status !== 'processing' && task?.status !== 'pending') return;
 
-    const interval = setInterval(loadTask, 5000);
+    // 缩短轮询间隔到 3 秒，让进度更新更平滑
+    const interval = setInterval(loadTask, 3000);
     return () => clearInterval(interval);
   }, [task?.status, loadTask]);
 

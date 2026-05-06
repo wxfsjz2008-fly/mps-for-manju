@@ -72,6 +72,37 @@ router.post('/submit', async (req: Request, res: Response) => {
 });
 
 /**
+ * 计算模拟进度
+ * 根据任务开始时间和预估处理时长，计算一个平滑的模拟进度
+ * @param startTime 任务开始时间
+ * @param currentProgress 当前 MPS 返回的进度
+ * @param estimatedMinutes 预估处理时长（分钟），默认 3 分钟
+ */
+function calculateSimulatedProgress(
+  startTime: string,
+  currentProgress: number | undefined,
+  estimatedMinutes: number = 3
+): number {
+  // 如果 MPS 返回了有效进度（>10%），使用 MPS 进度
+  if (currentProgress !== undefined && currentProgress > 10) {
+    return currentProgress;
+  }
+
+  // 计算已经过的时间（毫秒）
+  const elapsed = Date.now() - new Date(startTime).getTime();
+  const elapsedMinutes = elapsed / (1000 * 60);
+
+  // 使用对数函数计算模拟进度，让进度增长逐渐变慢
+  // 进度范围：10% ~ 90%（留 10% 给完成阶段）
+  // 公式：progress = 10 + 80 * (1 - e^(-elapsed/estimated))
+  const progress = 10 + 80 * (1 - Math.exp(-elapsedMinutes / estimatedMinutes));
+
+  // 如果 MPS 有返回进度，取两者中较大的
+  const mpsProgress = currentProgress ?? 0;
+  return Math.max(Math.round(progress), mpsProgress);
+}
+
+/**
  * 查询 MPS 任务状态
  * GET /api/mps/status/:taskId
  */
@@ -118,11 +149,26 @@ router.get('/status/:taskId', async (req: Request, res: Response) => {
           error_message: mpsStatus.errMsg || 'Unknown error',
         });
       }
-    } else if (mpsStatus.progress !== undefined) {
-      taskService.updateTask(taskId, {
-        progress: mpsStatus.progress,
-      });
+    } else {
+      // 任务进行中，计算模拟进度
+      const simulatedProgress = calculateSimulatedProgress(
+        task.updated_at, // 使用任务更新时间（开始处理的时间）
+        mpsStatus.progress
+      );
+      
+      // 只有进度增加时才更新，避免进度回退
+      if (simulatedProgress > (task.progress ?? 0)) {
+        taskService.updateTask(taskId, {
+          progress: simulatedProgress,
+        });
+      }
     }
+
+    // 获取最新的任务状态
+    const updatedTask = taskService.getTaskById(taskId);
+    const finalProgress = mpsStatus.status === 'FINISH' 
+      ? 100 
+      : (updatedTask?.progress ?? mpsStatus.progress ?? 0);
 
     res.json({
       success: true,
@@ -130,7 +176,7 @@ router.get('/status/:taskId', async (req: Request, res: Response) => {
         status: mpsStatus.status === 'FINISH' 
           ? (mpsStatus.outputUrl ? 'completed' : 'failed') 
           : 'processing',
-        progress: mpsStatus.progress,
+        progress: finalProgress,
         outputUrl: mpsStatus.outputUrl,
         errorMessage: mpsStatus.errMsg,
       },
