@@ -32,30 +32,20 @@ export const TaskListPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [isPolling, setIsPolling] = useState(false);
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const tasksRef = useRef<Task[]>([]); // 用 ref 存储任务列表，避免依赖问题
 
-  // 加载任务列表
-  const loadTasks = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const result = await taskApi.getList(
-        filter || undefined,
-        page,
-        20
-      );
-      setTasks(result.tasks);
-      setTotalPages(result.totalPages);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败');
-    } finally {
-      setLoading(false);
-    }
-  }, [filter, page]);
+  // 同步 tasks 到 ref
+  useEffect(() => {
+    tasksRef.current = tasks;
+  }, [tasks]);
 
-  // 刷新处理中任务的状态
+  // 刷新处理中任务的状态 - 使用 ref 读取当前任务列表
   const refreshProcessingTasks = useCallback(async () => {
+    // 从 ref 读取当前任务列表
+    const currentTasks = tasksRef.current;
+    
     // 找出所有处理中或等待中的任务
-    const processingTaskIds = tasks
+    const processingTaskIds = currentTasks
       .filter(t => t.status === 'processing' || t.status === 'pending')
       .map(t => t.id);
 
@@ -81,7 +71,37 @@ export const TaskListPage = () => {
     } finally {
       setIsPolling(false);
     }
-  }, [tasks]);
+  }, []); // 不依赖 tasks，通过 ref 读取
+
+  // 加载任务列表，加载完成后立即刷新处理中任务的状态
+  const loadTasks = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const result = await taskApi.getList(
+        filter || undefined,
+        page,
+        20
+      );
+      setTasks(result.tasks);
+      setTotalPages(result.totalPages);
+      
+      // 检查是否有处理中的任务，如果有则立即刷新状态
+      const hasProcessing = result.tasks.some(
+        (t: Task) => t.status === 'processing' || t.status === 'pending'
+      );
+      if (hasProcessing) {
+        // 更新 ref 以便 refreshProcessingTasks 能读取到最新数据
+        tasksRef.current = result.tasks;
+        // 立即刷新处理中任务的真实状态
+        setTimeout(() => refreshProcessingTasks(), 0);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '加载失败');
+    } finally {
+      setLoading(false);
+    }
+  }, [filter, page, refreshProcessingTasks]);
 
   // 初始加载任务列表
   useEffect(() => {
