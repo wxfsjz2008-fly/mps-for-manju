@@ -116,12 +116,17 @@ export const VideoUploader = ({
 
     try {
       // 1. 获取临时密钥
+      console.log('[Upload] Step 1: Getting COS credentials...');
       const credentials = await uploadApi.getCredentials();
+      console.log('[Upload] Step 1 completed: Credentials obtained');
 
       // 2. 生成上传路径
+      console.log('[Upload] Step 2: Generating upload key...');
       const { key } = await uploadApi.generateKey(selectedFile.name);
+      console.log('[Upload] Step 2 completed: Key =', key);
 
       // 3. 初始化 COS 客户端
+      console.log('[Upload] Step 3: Initializing COS client...');
       const cos = new COS({
         getAuthorization: (_, callback) => {
           callback({
@@ -135,6 +140,7 @@ export const VideoUploader = ({
       });
 
       // 4. 分片上传
+      console.log('[Upload] Step 4: Starting COS upload...');
       await new Promise<void>((resolve, reject) => {
         cos.uploadFile({
           Bucket: credentials.bucket,
@@ -152,17 +158,22 @@ export const VideoUploader = ({
           },
         }, (err) => {
           if (err) {
+            console.error('[Upload] Step 4 failed:', err);
             reject(err);
           } else {
+            console.log('[Upload] Step 4 completed: File uploaded to COS');
             resolve();
           }
         });
       });
 
       // 5. 通知服务端上传完成
+      console.log('[Upload] Step 5: Notifying server upload complete...');
       const uploadResult = await uploadApi.completeUpload(key, selectedFile.name, selectedFile.size);
+      console.log('[Upload] Step 5 completed:', uploadResult);
 
       // 6. 根据选中的模板数量创建任务
+      console.log('[Upload] Step 6: Creating tasks...', { autoEnhanceEnabled, selectedTemplateIds });
       const createdTaskIds: string[] = [];
       
       if (autoEnhanceEnabled && selectedTemplateIds.length > 0) {
@@ -172,6 +183,8 @@ export const VideoUploader = ({
           const template = RESOLUTION_TEMPLATES.find(t => t.id === templateId);
           const templateName = template?.label || `模板 ${templateId}`;
           
+          console.log('[Upload] Creating task for template:', { templateId, templateName });
+          
           // 创建任务（带模板信息）
           const task = await taskApi.create(
             uploadResult.url,
@@ -180,20 +193,27 @@ export const VideoUploader = ({
             templateId,
             templateName
           );
+          console.log('[Upload] Task created:', task.id);
           
           // 提交 MPS 任务
+          console.log('[Upload] Submitting MPS task...');
           await mpsApi.submit(task.id, templateId);
+          console.log('[Upload] MPS task submitted for task:', task.id);
           
           createdTaskIds.push(task.id);
         }
       } else {
         // 不自动增强时，只创建一个任务（不带模板信息）
+        console.log('[Upload] Creating task without auto-enhance...');
         const task = await taskApi.create(uploadResult.url, selectedFile.name, selectedFile.size);
+        console.log('[Upload] Task created:', task.id);
         createdTaskIds.push(task.id);
       }
 
       // 7. 回调 - 返回第一个任务的 ID（或者可以返回所有任务 ID）
+      console.log('[Upload] Step 7: All tasks created, IDs:', createdTaskIds);
       if (createdTaskIds.length > 0) {
+        console.log('[Upload] Calling onUploadComplete with taskId:', createdTaskIds[0]);
         onUploadComplete?.(createdTaskIds[0]);
       }
 
@@ -203,7 +223,10 @@ export const VideoUploader = ({
       setVideoDuration(null);
       setProgress(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '上传失败，请重试');
+      console.error('[Upload] Error occurred:', err);
+      const errorMessage = err instanceof Error ? err.message : '上传失败，请重试';
+      console.error('[Upload] Error message:', errorMessage);
+      setError(errorMessage);
     } finally {
       setUploading(false);
     }
