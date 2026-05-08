@@ -71,7 +71,32 @@ docker run -d -p 3001:3001 \
 - 触发条件: 推送到 main 分支
 - ⚠️ 需要在 GitHub 仓库设置中添加 Secret: `TCR_PASSWORD`
 
-**最后更新**: 2026-05-07 19:29 - CI/CD 构建测试 (v26) - CICD 测试
+**最后更新**: 2026-05-08 19:03 - 添加 TAPD 集成脚本
+
+## TAPD 集成
+
+本项目支持与 TAPD 集成，实现需求自动化处理。
+
+### 功能
+
+- **需求获取**: 从 TAPD 拉取需求列表
+- **Webhook 服务**: 接收 TAPD 新需求推送，自动触发 CodeBuddy CLI 实现
+- **定时轮询**: 定时检测新需求并自动处理
+
+### 使用方式
+
+```bash
+cd scripts/tapd-integration
+npm install
+
+# 启动 Webhook 服务
+npm run webhook
+
+# 或使用定时轮询
+npm run cron:daemon
+```
+
+详见 `scripts/tapd-integration/README.md`
 
 ## 许可证
 

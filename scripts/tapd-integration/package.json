@@ -1,0 +1,28 @@
+{
+  "name": "tapd-integration",
+  "version": "1.0.0",
+  "description": "TAPD 需求集成脚本 - 获取 TAPD 项目需求",
+  "main": "fetch-stories.ts",
+  "scripts": {
+    "fetch": "npx ts-node fetch-stories.ts",
+    "fetch:all": "npx ts-node fetch-stories.ts all",
+    "fetch:new": "npx ts-node fetch-stories.ts new",
+    "fetch:since": "npx ts-node fetch-stories.ts since",
+    "fetch:modified": "npx ts-node fetch-stories.ts modified",
+    "help": "npx ts-node fetch-stories.ts help",
+    "check": "npx ts-node check-and-implement.ts check",
+    "pending": "npx ts-node check-and-implement.ts pending",
+    "done": "npx ts-node check-and-implement.ts done",
+    "webhook": "npx ts-node webhook-server.ts",
+    "cron:once": "npx ts-node cron-trigger.ts once",
+    "cron:daemon": "npx ts-node cron-trigger.ts daemon"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}
