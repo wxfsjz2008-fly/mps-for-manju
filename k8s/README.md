@@ -109,7 +109,7 @@ kubectl patch pvc mps-data-pvc -p '{"spec":{"resources":{"requests":{"storage":"
 │  ┌─────────────────────────────────────────────────────┐    │
 │  │   Container: mps-for-manju                           │    │
 │  │                                                       │    │
-│  │   /app/backend/data/ ← volumeMount                   │    │
+│  │   /app/data/ ← volumeMount（SQLite 数据库目录）  │    │
 │  │         │                                             │    │
 │  └─────────│─────────────────────────────────────────────┘    │
 │            │                                                  │

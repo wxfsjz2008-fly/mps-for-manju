@@ -51,7 +51,7 @@ spec:
           # 挂载持久化存储卷
           volumeMounts:
             - name: data-volume
-              mountPath: /app/backend/data  # SQLite 数据库存储目录
+              mountPath: /app/data  # SQLite 数据库存储目录（与 Dockerfile 中的路径一致）
       # 定义持久化存储卷
       volumes:
         - name: data-volume
