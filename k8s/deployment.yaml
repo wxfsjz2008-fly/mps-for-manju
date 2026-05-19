@@ -7,6 +7,10 @@ metadata:
     app: mps-for-manju
 spec:
   replicas: 1
+  # 使用 Recreate 策略：先停止旧 Pod，再创建新 Pod
+  # 这样可以避免 CBS 云硬盘挂载冲突（CBS 只能挂载到一个 Pod）
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: mps-for-manju
