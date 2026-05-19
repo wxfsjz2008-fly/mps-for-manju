@@ -48,6 +48,31 @@ docker run -d -p 3001:3001 \
   mps-for-manju:latest
 ```
 
+## Kubernetes 部署 (TKE)
+
+本项目支持在腾讯云 TKE 上部署，并使用 PVC 持久化存储 SQLite 数据库。
+
+### 部署步骤
+
+```bash
+# 1. 创建 Secret（存储腾讯云凭证）
+kubectl apply -f k8s/secret.yaml
+
+# 2. 创建 PVC（持久化存储）
+kubectl apply -f k8s/pvc.yaml
+
+# 3. 部署应用
+kubectl apply -f k8s/deployment.yaml
+```
+
+### 持久化存储
+
+- 使用腾讯云 CBS 云硬盘作为持久化存储
+- SQLite 数据库文件存储在 `/app/backend/data/` 目录
+- Pod 重启后数据不会丢失
+
+详见 `k8s/README.md`
+
 ## 环境变量
 
 | 变量名 | 说明 |
