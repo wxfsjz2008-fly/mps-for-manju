@@ -3,7 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { initDatabase } from './models/mysql-database.js';
+import { initDatabase } from './models/database.js';
 import { authMiddleware } from './middleware/auth.js';
 import authRoutes from './routes/auth.js';
 import uploadRoutes from './routes/upload.js';

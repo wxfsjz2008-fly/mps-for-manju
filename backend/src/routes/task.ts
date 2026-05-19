@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import taskService from '../services/mysql-task.js';
+import taskService from '../services/task.js';
 import mpsService from '../services/mps.js';
 import { TaskStatus } from '../types/task.js';
 
@@ -40,7 +40,7 @@ function calculateSimulatedProgress(
  * 创建任务
  * POST /api/tasks
  */
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', (req: Request, res: Response) => {
   try {
     const { videoUrl, videoName, videoSize, templateId, templateName } = req.body;
 
@@ -52,7 +52,7 @@ router.post('/', async (req: Request, res: Response) => {
       return;
     }
 
-    const task = await taskService.createTask({
+    const task = taskService.createTask({
       original_video_url: videoUrl,
       original_video_name: videoName,
       original_video_size: videoSize,
@@ -77,11 +77,11 @@ router.post('/', async (req: Request, res: Response) => {
  * 获取任务列表
  * GET /api/tasks
  */
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', (req: Request, res: Response) => {
   try {
     const { status, page, pageSize } = req.query;
 
-    const result = await taskService.getTaskList({
+    const result = taskService.getTaskList({
       status: status as TaskStatus | undefined,
       page: page ? parseInt(page as string) : 1,
       pageSize: pageSize ? parseInt(pageSize as string) : 20,
@@ -123,7 +123,7 @@ router.post('/refresh-status', async (req: Request, res: Response) => {
     const updatedTasks = await Promise.all(
       taskIds.map(async (taskId: string) => {
         try {
-          const task = await taskService.getTaskById(taskId);
+          const task = taskService.getTaskById(taskId);
           if (!task) {
             return { taskId, error: 'Task not found' };
           }
@@ -139,7 +139,7 @@ router.post('/refresh-status', async (req: Request, res: Response) => {
           // 根据 MPS 状态更新任务
           if (mpsStatus.status === 'FINISH') {
             if (mpsStatus.outputUrl) {
-              const updatedTask = await taskService.updateTask(taskId, {
+              const updatedTask = taskService.updateTask(taskId, {
                 status: 'completed',
                 output_video_url: mpsStatus.outputUrl,
                 progress: 100,
@@ -147,7 +147,7 @@ router.post('/refresh-status', async (req: Request, res: Response) => {
               });
               return { taskId, task: updatedTask };
             } else if (mpsStatus.errCode) {
-              const updatedTask = await taskService.updateTask(taskId, {
+              const updatedTask = taskService.updateTask(taskId, {
                 status: 'failed',
                 error_message: mpsStatus.errMsg || 'Unknown error',
               });
@@ -162,7 +162,7 @@ router.post('/refresh-status', async (req: Request, res: Response) => {
             
             // 只有进度增加时才更新，避免进度回退
             if (simulatedProgress > (task.progress ?? 0)) {
-              const updatedTask = await taskService.updateTask(taskId, {
+              const updatedTask = taskService.updateTask(taskId, {
                 progress: simulatedProgress,
               });
               return { taskId, task: updatedTask };
@@ -202,11 +202,11 @@ router.post('/refresh-status', async (req: Request, res: Response) => {
  * 获取任务详情
  * GET /api/tasks/:id
  */
-router.get('/:id', async (req: Request, res: Response) => {
+router.get('/:id', (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const task = await taskService.getTaskById(id);
+    const task = taskService.getTaskById(id);
     if (!task) {
       res.status(404).json({
         success: false,
@@ -232,12 +232,12 @@ router.get('/:id', async (req: Request, res: Response) => {
  * 更新任务状态
  * PATCH /api/tasks/:id
  */
-router.patch('/:id', async (req: Request, res: Response) => {
+router.patch('/:id', (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
 
-    const task = await taskService.updateTask(id, updateData);
+    const task = taskService.updateTask(id, updateData);
     if (!task) {
       res.status(404).json({
         success: false,
@@ -263,11 +263,11 @@ router.patch('/:id', async (req: Request, res: Response) => {
  * 删除单个任务
  * DELETE /api/tasks/:id
  */
-router.delete('/:id', async (req: Request, res: Response) => {
+router.delete('/:id', (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const success = await taskService.deleteTask(id);
+    const success = taskService.deleteTask(id);
     if (!success) {
       res.status(404).json({
         success: false,
@@ -293,7 +293,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
  * 批量删除任务
  * POST /api/tasks/batch-delete
  */
-router.post('/batch-delete', async (req: Request, res: Response) => {
+router.post('/batch-delete', (req: Request, res: Response) => {
   try {
     const { ids } = req.body;
 
@@ -305,7 +305,7 @@ router.post('/batch-delete', async (req: Request, res: Response) => {
       return;
     }
 
-    const result = await taskService.batchDeleteTasks(ids);
+    const result = taskService.batchDeleteTasks(ids);
 
     res.json({
       success: true,
