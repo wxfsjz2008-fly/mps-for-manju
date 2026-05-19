@@ -1,139 +1,140 @@
-# TKE 部署指南
+# Kubernetes 部署配置
 
-## 持久化存储配置
+本目录包含在腾讯云 TKE (Tencent Kubernetes Engine) 上部署 MPS 视频增强系统所需的 Kubernetes 配置文件。
 
-本项目使用腾讯云 CBS 云硬盘实现 SQLite 数据库持久化存储，确保 Pod 重启后数据不丢失。
+## 架构说明
 
-### 文件说明
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        TKE 集群                                  │
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  Deployment (RollingUpdate)                               │   │
+│  │                                                           │   │
+│  │  ┌─────────────┐    ┌─────────────┐                      │   │
+│  │  │   Pod A     │    │   Pod B     │                      │   │
+│  │  │  (副本 1)   │    │  (副本 2)   │                      │   │
+│  │  └──────┬──────┘    └──────┬──────┘                      │   │
+│  │         │                   │                             │   │
+│  │         └─────────┬─────────┘                             │   │
+│  │                   │                                       │   │
+│  └───────────────────┼───────────────────────────────────────┘   │
+│                      │                                           │
+│                      ▼                                           │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  Service (ClusterIP)                                      │   │
+│  │  → 负载均衡到多个 Pod                                     │   │
+│  └───────────────────────────────────────────────────────────┘   │
+│                      │                                           │
+└──────────────────────┼───────────────────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  腾讯云 MySQL (CynosDB)                                          │
+│  → 多副本共享数据库                                              │
+│  → 支持连接池、高可用                                            │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## 文件说明
 
 | 文件 | 说明 |
 |------|------|
-| `pvc.yaml` | PVC 持久卷配置（StorageClass + PersistentVolumeClaim） |
-| `deployment.yaml` | 应用部署配置（已配置卷挂载） |
-| `secret.yaml` | 腾讯云密钥配置 |
+| `deployment.yaml` | Deployment 和 Service 配置 |
+| `secret.yaml.example` | 腾讯云凭证 Secret 模板 |
+| `mysql-secret.yaml.example` | MySQL 数据库凭证 Secret 模板 |
 
-### 部署步骤
+## 部署步骤
 
-#### 1. 检查集群是否已有 CBS StorageClass
+### 1. 准备腾讯云 MySQL 数据库
 
-```bash
-kubectl get storageclass
-```
+1. 登录 [腾讯云 MySQL 控制台](https://console.cloud.tencent.com/cdb)
+2. 创建 MySQL 实例（推荐使用 CynosDB MySQL 版，性价比更高）
+3. 配置：
+   - **规格**：1核1G 即可满足基础需求
+   - **网络**：选择与 TKE 集群相同的 VPC
+   - **字符集**：utf8mb4
+4. 创建数据库 `mps`
+5. 记录内网连接地址、端口、用户名和密码
 
-如果已存在 `cbs-ssd` 或类似的 StorageClass，可以跳过 StorageClass 创建，直接修改 `pvc.yaml` 中的 `storageClassName` 为已有的名称。
-
-#### 2. 创建 PVC（持久卷声明）
-
-```bash
-# 如果集群没有 cbs-ssd StorageClass，先创建完整配置
-kubectl apply -f k8s/pvc.yaml
-
-# 或者只创建 PVC 部分（如果 StorageClass 已存在）
-# 编辑 pvc.yaml，只保留 PersistentVolumeClaim 部分，然后应用
-```
-
-#### 3. 验证 PVC 状态
+### 2. 创建 Secret
 
 ```bash
-kubectl get pvc mps-data-pvc
+# 创建腾讯云凭证 Secret
+kubectl create secret generic mps-tencent-credentials \
+  --from-literal=TENCENT_SECRET_ID='YOUR_SECRET_ID' \
+  --from-literal=TENCENT_SECRET_KEY='YOUR_SECRET_KEY' \
+  -n default
+
+# 创建 MySQL 凭证 Secret
+kubectl create secret generic mps-mysql-credentials \
+  --from-literal=MYSQL_HOST='YOUR_MYSQL_HOST' \
+  --from-literal=MYSQL_PORT='3306' \
+  --from-literal=MYSQL_USER='YOUR_USER' \
+  --from-literal=MYSQL_PASSWORD='YOUR_PASSWORD' \
+  --from-literal=MYSQL_DATABASE='mps' \
+  -n default
 ```
 
-状态应为 `Pending`（等待 Pod 调度）或 `Bound`（已绑定）。
-
-> **注意**：由于配置了 `volumeBindingMode: WaitForFirstConsumer`，PVC 会在 Pod 首次调度时才绑定云硬盘。
-
-#### 4. 部署应用
+### 3. 部署应用
 
 ```bash
-# 创建 Secret（如果尚未创建）
-kubectl apply -f k8s/secret.yaml
-
-# 部署应用
-kubectl apply -f k8s/deployment.yaml
+# 部署 Deployment 和 Service
+kubectl apply -f deployment.yaml
 ```
 
-#### 5. 验证部署
+### 4. 验证部署
 
 ```bash
 # 查看 Pod 状态
 kubectl get pods -l app=mps-for-manju
 
-# 查看 PVC 是否已绑定
-kubectl get pvc mps-data-pvc
+# 查看日志
+kubectl logs -l app=mps-for-manju --tail=100
 
-# 查看 Pod 详情（检查卷挂载）
-kubectl describe pod -l app=mps-for-manju
+# 测试数据库连接
+kubectl exec -it $(kubectl get pod -l app=mps-for-manju -o jsonpath='{.items[0].metadata.name}') -- /bin/sh -c "echo 'SELECT 1' | mysql -h \$MYSQL_HOST -u \$MYSQL_USER -p\$MYSQL_PASSWORD"
 ```
 
-### 验证数据持久化
+## 更新部署
 
-1. **创建测试数据**：在应用中创建一些任务
-2. **删除 Pod**：`kubectl delete pod -l app=mps-for-manju`
-3. **等待 Pod 重建**：`kubectl get pods -w`
-4. **验证数据**：检查之前创建的任务是否仍然存在
+使用 RollingUpdate 策略实现零停机更新：
 
-### 常见问题
-
-#### Q: PVC 一直处于 Pending 状态？
-
-**A**: 可能原因：
-- StorageClass 不存在或名称不匹配
-- 集群没有安装 CBS CSI 插件
-- 配额不足
-
-检查命令：
 ```bash
-kubectl describe pvc mps-data-pvc
-kubectl get events --field-selector involvedObject.name=mps-data-pvc
+# 更新镜像版本
+kubectl set image deployment/mps-for-manju mps-for-manju=xiongfei-test.tencentcloudcr.com/xiongfei/mps-for-manju:v0502
+
+# 查看更新状态
+kubectl rollout status deployment/mps-for-manju
+
+# 回滚到上一版本（如果有问题）
+kubectl rollout undo deployment/mps-for-manju
 ```
 
-#### Q: Pod 启动失败，提示卷挂载错误？
+## 扩缩容
 
-**A**: 检查：
-1. PVC 是否创建成功
-2. PVC 名称是否与 Deployment 中引用的一致
-3. namespace 是否一致
-
-#### Q: 如何扩容存储？
-
-**A**: 修改 PVC 的 `spec.resources.requests.storage`：
 ```bash
-kubectl patch pvc mps-data-pvc -p '{"spec":{"resources":{"requests":{"storage":"20Gi"}}}}'
+# 扩容到 3 个副本
+kubectl scale deployment/mps-for-manju --replicas=3
+
+# 缩容到 1 个副本
+kubectl scale deployment/mps-for-manju --replicas=1
 ```
 
-### 架构说明
+## 对比：SQLite vs MySQL
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        Pod                                   │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │   Container: mps-for-manju                           │    │
-│  │                                                       │    │
-│  │   /app/data/ ← volumeMount（SQLite 数据库目录）  │    │
-│  │         │                                             │    │
-│  └─────────│─────────────────────────────────────────────┘    │
-│            │                                                  │
-│            ▼                                                  │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │   Volume: data-volume                                │    │
-│  │   persistentVolumeClaim: mps-data-pvc               │    │
-│  └─────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────────────┐
-│         PVC: mps-data-pvc (10Gi, cbs-ssd)                   │
-└─────────────────────────────────────────────────────────────┘
-                         │
-                         ▼
-┌─────────────────────────────────────────────────────────────┐
-│              腾讯云 CBS 云硬盘 (SSD)                          │
-│              数据持久化存储                                   │
-└─────────────────────────────────────────────────────────────┘
-```
+| 特性 | SQLite + CBS | MySQL |
+|------|--------------|-------|
+| 多副本支持 | ❌ 不支持 | ✅ 支持 |
+| 更新策略 | Recreate（有停机） | RollingUpdate（零停机） |
+| 数据持久化 | CBS 云硬盘 | 云数据库 |
+| 成本 | 低（CBS ~4元/月） | 中（MySQL ~30元/月） |
+| 运维复杂度 | 低 | 中 |
+| 适用场景 | 开发/测试/小规模 | 生产环境 |
 
-### 注意事项
+## 注意事项
 
-1. **副本数限制**：CBS 云硬盘只支持 `ReadWriteOnce`（单节点读写），因此 `replicas` 必须保持为 `1`
-2. **可用区限制**：CBS 云硬盘与 Pod 必须在同一可用区
-3. **数据备份**：建议定期备份重要数据，可使用腾讯云快照功能
+1. **VPC 网络**：确保 TKE 集群和 MySQL 实例在同一 VPC 中
+2. **安全组**：MySQL 安全组需要允许来自 TKE 节点的连接（3306 端口）
+3. **连接池**：应用使用 10 个连接的连接池，MySQL 实例需要支持相应的并发连接数
+4. **备份**：建议开启 MySQL 自动备份功能

@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import mpsService from '../services/mps.js';
-import taskService from '../services/task.js';
+import taskService from '../services/mysql-task.js';
 import cosService from '../services/cos.js';
 
 const router = Router();
@@ -22,7 +22,7 @@ router.post('/submit', async (req: Request, res: Response) => {
     }
 
     // 获取任务信息
-    const task = taskService.getTaskById(taskId);
+    const task = await taskService.getTaskById(taskId);
     if (!task) {
       res.status(404).json({
         success: false,
@@ -50,7 +50,7 @@ router.post('/submit', async (req: Request, res: Response) => {
     const result = await mpsService.submitEnhanceTask(inputKey, outputKey, templateId);
 
     // 更新任务状态
-    taskService.updateTask(taskId, {
+    await taskService.updateTask(taskId, {
       status: 'processing',
       mps_task_id: result.taskId,
     });
@@ -111,7 +111,7 @@ router.get('/status/:taskId', async (req: Request, res: Response) => {
     const { taskId } = req.params;
 
     // 获取任务
-    const task = taskService.getTaskById(taskId);
+    const task = await taskService.getTaskById(taskId);
     if (!task) {
       res.status(404).json({
         success: false,
@@ -137,14 +137,14 @@ router.get('/status/:taskId', async (req: Request, res: Response) => {
     // 更新任务状态
     if (mpsStatus.status === 'FINISH') {
       if (mpsStatus.outputUrl) {
-        taskService.updateTask(taskId, {
+        await taskService.updateTask(taskId, {
           status: 'completed',
           output_video_url: mpsStatus.outputUrl,
           progress: 100,
           completed_at: new Date().toISOString(),
         });
       } else if (mpsStatus.errCode) {
-        taskService.updateTask(taskId, {
+        await taskService.updateTask(taskId, {
           status: 'failed',
           error_message: mpsStatus.errMsg || 'Unknown error',
         });
@@ -158,14 +158,14 @@ router.get('/status/:taskId', async (req: Request, res: Response) => {
       
       // 只有进度增加时才更新，避免进度回退
       if (simulatedProgress > (task.progress ?? 0)) {
-        taskService.updateTask(taskId, {
+        await taskService.updateTask(taskId, {
           progress: simulatedProgress,
         });
       }
     }
 
     // 获取最新的任务状态
-    const updatedTask = taskService.getTaskById(taskId);
+    const updatedTask = await taskService.getTaskById(taskId);
     const finalProgress = mpsStatus.status === 'FINISH' 
       ? 100 
       : (updatedTask?.progress ?? mpsStatus.progress ?? 0);
@@ -202,7 +202,7 @@ router.post('/callback', async (req: Request, res: Response) => {
     const { taskId, status, outputUrl, errorMessage } = mpsService.parseMpsCallback(callbackData);
 
     // 查找任务
-    const task = taskService.getTaskByMpsTaskId(taskId);
+    const task = await taskService.getTaskByMpsTaskId(taskId);
     if (!task) {
       console.warn('Task not found for MPS task ID:', taskId);
       res.json({ success: true });
@@ -211,14 +211,14 @@ router.post('/callback', async (req: Request, res: Response) => {
 
     // 更新任务
     if (status === 'completed') {
-      taskService.updateTask(task.id, {
+      await taskService.updateTask(task.id, {
         status: 'completed',
         output_video_url: outputUrl,
         progress: 100,
         completed_at: new Date().toISOString(),
       });
     } else {
-      taskService.updateTask(task.id, {
+      await taskService.updateTask(task.id, {
         status: 'failed',
         error_message: errorMessage,
       });
