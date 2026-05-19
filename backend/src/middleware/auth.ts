@@ -9,12 +9,30 @@ const PUBLIC_PATHS = [
   '/health',
 ];
 
+// 静态文件扩展名（不需要认证）
+const STATIC_EXTENSIONS = [
+  '.html', '.css', '.js', '.jsx', '.ts', '.tsx',
+  '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico',
+  '.woff', '.woff2', '.ttf', '.eot',
+  '.json', '.map',
+];
+
 /**
  * JWT 认证中间件
  */
 export function authMiddleware(req: Request, res: Response, next: NextFunction) {
   // 检查是否是公开路径
   if (PUBLIC_PATHS.some(path => req.path === path || req.path.startsWith(path))) {
+    return next();
+  }
+
+  // 跳过非 API 请求（静态文件、前端页面）
+  if (!req.path.startsWith('/api')) {
+    return next();
+  }
+
+  // 跳过静态文件请求
+  if (STATIC_EXTENSIONS.some(ext => req.path.endsWith(ext))) {
     return next();
   }
 
