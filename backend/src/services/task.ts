@@ -216,4 +216,43 @@ export default {
   getTaskById,
   getTaskByMpsTaskId,
   getTaskList,
+  deleteTask,
+  batchDeleteTasks,
 };
+
+/**
+ * 删除单个任务
+ */
+export function deleteTask(id: string): boolean {
+  const db = getDatabase();
+  const task = getTaskById(id);
+  if (!task) {
+    return false;
+  }
+
+  db.run('DELETE FROM tasks WHERE id = ?', [id]);
+  saveDatabase();
+  return true;
+}
+
+/**
+ * 批量删除任务
+ */
+export function batchDeleteTasks(ids: string[]): { deleted: number; failed: string[] } {
+  const db = getDatabase();
+  let deleted = 0;
+  const failed: string[] = [];
+
+  for (const id of ids) {
+    const task = getTaskById(id);
+    if (task) {
+      db.run('DELETE FROM tasks WHERE id = ?', [id]);
+      deleted++;
+    } else {
+      failed.push(id);
+    }
+  }
+
+  saveDatabase();
+  return { deleted, failed };
+}

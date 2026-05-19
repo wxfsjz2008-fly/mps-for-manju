@@ -1,12 +1,19 @@
 import { useNavigate } from 'react-router-dom';
 import VideoUploader from '../components/VideoUploader';
+import { useAuth } from '../contexts/AuthContext';
 
 export const UploadPage = () => {
   const navigate = useNavigate();
+  const { logout, username } = useAuth();
 
   const handleUploadComplete = (taskId: string) => {
     // 上传完成后跳转到任务详情页
     navigate(`/tasks/${taskId}`);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
 
   return (
@@ -15,13 +22,22 @@ export const UploadPage = () => {
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">漫剧视频增强系统</h1>
-          <nav className="flex gap-4">
+          <nav className="flex items-center gap-4">
             <button
               onClick={() => navigate('/tasks')}
               className="text-gray-600 hover:text-gray-900 transition-colors"
             >
               任务列表
             </button>
+            <div className="flex items-center gap-2 text-gray-600">
+              <span className="text-sm">{username}</span>
+              <button
+                onClick={handleLogout}
+                className="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                退出
+              </button>
+            </div>
           </nav>
         </div>
       </header>

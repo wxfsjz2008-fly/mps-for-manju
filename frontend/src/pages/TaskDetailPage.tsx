@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { taskApi, mpsApi, uploadApi } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import type { Task, TaskStatus } from '../types';
 import SideBySidePlayer from '../components/SideBySidePlayer';
 import SplitComparePlayer from '../components/SplitComparePlayer';
@@ -33,6 +34,7 @@ interface SignedUrlCache {
 export const TaskDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { logout, username } = useAuth();
   
   const [task, setTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
@@ -264,13 +266,22 @@ export const TaskDetailPage = () => {
             </button>
             <h1 className="text-xl font-bold text-gray-900">任务详情</h1>
           </div>
-          <nav className="flex gap-4">
+          <nav className="flex items-center gap-4">
             <button
               onClick={() => navigate('/')}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               上传新视频
             </button>
+            <div className="flex items-center gap-2 text-gray-600">
+              <span className="text-sm">{username}</span>
+              <button
+                onClick={() => { logout(); navigate('/login'); }}
+                className="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                退出
+              </button>
+            </div>
           </nav>
         </div>
       </header>

@@ -1,0 +1,35 @@
+# PVC 配置 - 腾讯云 CBS 云硬盘持久化存储
+# 用于存储 SQLite 数据库文件，确保 Pod 重启后数据不丢失
+
+---
+# StorageClass - 使用腾讯云 CBS 云硬盘
+# 注意：TKE 集群通常已预置 cbs-ssd 等 StorageClass，可以跳过此步骤
+# 如果集群中已存在合适的 StorageClass，可以直接使用，无需创建
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: cbs-ssd
+provisioner: cloud.tencent.com/qcloud-cbs
+parameters:
+  # 云硬盘类型：CLOUD_SSD（SSD云硬盘）、CLOUD_PREMIUM（高性能云硬盘）
+  diskType: CLOUD_SSD
+reclaimPolicy: Retain  # 保留策略：删除 PVC 时保留数据
+volumeBindingMode: WaitForFirstConsumer  # 延迟绑定，等待 Pod 调度后再创建云硬盘
+allowVolumeExpansion: true  # 允许扩容
+
+---
+# PersistentVolumeClaim - 持久卷声明
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mps-data-pvc
+  namespace: default
+  labels:
+    app: mps-for-manju
+spec:
+  accessModes:
+    - ReadWriteOnce  # CBS 云硬盘只支持单节点读写
+  storageClassName: cbs-ssd
+  resources:
+    requests:
+      storage: 10Gi  # 申请 10GB 存储空间，可根据需要调整

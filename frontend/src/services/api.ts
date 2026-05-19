@@ -6,6 +6,56 @@ const api = axios.create({
   timeout: 30000,
 });
 
+// 请求拦截器 - 自动添加 token
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// 响应拦截器 - 处理 401 错误
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('username');
+      // 如果不在登录页，跳转到登录页
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+// 认证相关 API
+export const authApi = {
+  login: async (username: string, password: string): Promise<{ token: string; username: string; expiresIn: number }> => {
+    const res = await api.post<ApiResponse<{ token: string; username: string; expiresIn: number }>>('/auth/login', {
+      username,
+      password,
+    });
+    if (!res.data.success || !res.data.data) {
+      throw new Error(res.data.error || '登录失败');
+    }
+    return res.data.data;
+  },
+
+  verify: async (): Promise<{ username: string; valid: boolean }> => {
+    const res = await api.get<ApiResponse<{ username: string; valid: boolean }>>('/auth/verify');
+    if (!res.data.success || !res.data.data) {
+      throw new Error(res.data.error || '验证失败');
+    }
+    return res.data.data;
+  },
+};
+
 // 上传相关 API
 export const uploadApi = {
   getCredentials: async (): Promise<STSCredentials> => {
@@ -120,6 +170,29 @@ export const taskApi = {
     }
     return res.data.data;
   },
+
+  /**
+   * 删除单个任务
+   * @param id 任务 ID
+   */
+  delete: async (id: string): Promise<void> => {
+    const res = await api.delete<ApiResponse<void>>(`/tasks/${id}`);
+    if (!res.data.success) {
+      throw new Error(res.data.error || '删除任务失败');
+    }
+  },
+
+  /**
+   * 批量删除任务
+   * @param ids 任务 ID 列表
+   */
+  batchDelete: async (ids: string[]): Promise<{ deleted: number; failed: string[] }> => {
+    const res = await api.post<ApiResponse<{ deleted: number; failed: string[] }>>('/tasks/batch-delete', { ids });
+    if (!res.data.success || !res.data.data) {
+      throw new Error(res.data.error || '批量删除任务失败');
+    }
+    return res.data.data;
+  },
 };
 
 // MPS 相关 API
@@ -151,4 +224,4 @@ export const mpsApi = {
   },
 };
 
-export default { uploadApi, taskApi, mpsApi };
+export default { authApi, uploadApi, taskApi, mpsApi };

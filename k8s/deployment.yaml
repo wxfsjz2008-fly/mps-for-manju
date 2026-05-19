@@ -44,6 +44,15 @@ spec:
             limits:
               memory: "512Mi"
               cpu: "500m"
+          # 挂载持久化存储卷
+          volumeMounts:
+            - name: data-volume
+              mountPath: /app/backend/data  # SQLite 数据库存储目录
+      # 定义持久化存储卷
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: mps-data-pvc  # 引用 PVC
 ---
 apiVersion: v1
 kind: Service

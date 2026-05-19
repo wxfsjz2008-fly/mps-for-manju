@@ -5,6 +5,13 @@ dotenv.config();
 export const config = {
   port: process.env.PORT || 3001,
   
+  // 认证配置
+  auth: {
+    jwtSecret: process.env.JWT_SECRET || 'mps-manju-secret-key-2024',
+    username: process.env.AUTH_USERNAME || 'admin',
+    password: process.env.AUTH_PASSWORD || 'Admin@123',
+  },
+  
   // 腾讯云配置
   tencent: {
     secretId: process.env.TENCENT_SECRET_ID || '',

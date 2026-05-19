@@ -259,4 +259,66 @@ router.patch('/:id', (req: Request, res: Response) => {
   }
 });
 
+/**
+ * 删除单个任务
+ * DELETE /api/tasks/:id
+ */
+router.delete('/:id', (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const success = taskService.deleteTask(id);
+    if (!success) {
+      res.status(404).json({
+        success: false,
+        error: '任务不存在',
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      message: '删除成功',
+    });
+  } catch (error) {
+    console.error('Delete task error:', error);
+    res.status(500).json({
+      success: false,
+      error: '删除任务失败',
+    });
+  }
+});
+
+/**
+ * 批量删除任务
+ * POST /api/tasks/batch-delete
+ */
+router.post('/batch-delete', (req: Request, res: Response) => {
+  try {
+    const { ids } = req.body;
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      res.status(400).json({
+        success: false,
+        error: '请提供要删除的任务 ID 列表',
+      });
+      return;
+    }
+
+    const result = taskService.batchDeleteTasks(ids);
+
+    res.json({
+      success: true,
+      data: result,
+      message: `成功删除 ${result.deleted} 个任务`,
+    });
+  } catch (error) {
+    console.error('Batch delete tasks error:', error);
+    res.status(500).json({
+      success: false,
+      error: '批量删除任务失败',
+    });
+  }
+});
+
 export default router;

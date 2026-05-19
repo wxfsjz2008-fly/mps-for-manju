@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { initDatabase } from './models/database.js';
+import { authMiddleware } from './middleware/auth.js';
+import authRoutes from './routes/auth.js';
 import uploadRoutes from './routes/upload.js';
 import mpsRoutes from './routes/mps.js';
 import taskRoutes from './routes/task.js';
@@ -20,7 +22,11 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
+// 认证中间件（放在路由之前）
+app.use(authMiddleware);
+
 // 路由
+app.use('/api/auth', authRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/mps', mpsRoutes);
 app.use('/api/tasks', taskRoutes);
